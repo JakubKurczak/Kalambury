@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Socket.IO chat</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        body>#players-box {
+            height: 100vh;
+            width: 15vw;
+            box-shadow: 0px 0px 5px #000;
+        }
+
+        body>#canvas-box {
+            height: 100vh;
+            width: 50vw;
+            box-shadow: 0px 0px 5px #000;
+
+        }
+
+        body>#message-box {
+            height: 100vh;
+            width: 15vw;
+            box-shadow: 0px 0px 5px #000;
+
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.3.1/lib/p5.js"></script>
+    <script>
+
+    </script>
+</head>
+
+<body>
+
+    <div id="players-box">
+        <h2>Players: </h2>
+        <ul id="players"></ul>
+    </div>
+    <div id="canvas-box">
+
+    </div>
+    <div id="message-box">
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="input" autocomplete="off" /><button>Send</button>
+        </form>
+    </div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+
+        function setup() {
+            var canvas = createCanvas(400, 400);
+            canvas.parent('canvas-box');
+            background(127);
+            socket.on('mouse',
+                function (data) {
+
+                    fill(0);
+                    ellipse(data.x, data.y, 5, 5);
+                }
+            );
+        }
+
+        function mouseDragged() {
+            let data = {
+                x: mouseX,
+                y: mouseY
+            };
+            console.log(data);
+            // Send that object to the socket
+            socket.emit('mouse', data);
+        }
+
+
+
+
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', function (msg) {
+            var item = document.createElement('li');
+            item.textContent = msg;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('users', function (users) {
+            var players = document.getElementById('players');
+            players.innerHTML = "";
+            for (const i in users) {
+                var item = document.createElement('li');
+                item.textContent = users[i];
+                players.appendChild(item);
+            }
+        });
+    </script>
+</body>
+
+</html>
