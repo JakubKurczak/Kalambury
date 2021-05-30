@@ -3,70 +3,195 @@
 
 <head>
     <title>Socket.IO chat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/static/css/index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.3.1/lib/p5.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Emilys+Candy&display=swap" rel="stylesheet">
     <style>
-        body {
+        @font-face { font-family: Candy; src: url('/fonts/Double_Bubble_shadow.otf'); } 
+        body{
+            margin: 0;
+            padding: 0;
+            font-family: Candy, cursive;
+            font-weight: 600;
+            overflow: hidden;
+            background: #6ebbdf;
+        }
+        .tools {
             display: flex;
+            justify-content: center;
             flex-direction: row;
-            justify-content: space-between;
+            margin-top: 10px;
         }
-
-        body>#players-box {
-            height: 100vh;
-            width: 15vw;
-            box-shadow: 0px 0px 5px #000;
-        }
-
-        body>#canvas-box {
-            height: 100vh;
-            width: 50vw;
-            box-shadow: 0px 0px 5px #000;
+        .tools .color-field {
+            height: 40px;
+            width: 40px;
+            min-height: 40px;
+            min-width: 40px;
+            cursor: pointer;
+            display: inline-block;
+            box-sizing: border-box;
+            border: 2px solid black;
 
         }
-
-        body>#message-box {
-            height: 100vh;
-            width: 15vw;
-            box-shadow: 0px 0px 5px #000;
-
+        .border{
+            width: 1000px;
+            height: 600px;
+            border: 20px solid blue;
+            box-sizing: border-box;
+            box-shadow: -5px 2px 10px 6px black;
+        }
+        .container{
+            margin-right: 0; 
+            margin-left: 0;
+        }
+        .tools .button{
+            align-self: center;
+            width: 100px;
+            height: 40px;
+            border: 2px solid black;
+            cursor: pointer;
+            color: white;
+            background: #191919;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+        .color-picker {
+            align-self: center;
+            margin: 0 10px;
+            height: 50px;
+        }
+        .pen-range{
+            align-self: center;
+            margin: 0 10px;
+            height: 50px;
+        }
+        .chat{
+            background: #454545;
+            width: 300px;
+            height: 600px;
+            position: absolute;
+            border: 3px solid white;
+            border-radius: 15px;
+            font-weight: 300;
+            color: rgb(225, 233, 211);
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .players{
+            background: #454545;
+            width: 300px;
+            height: 600px;
+            position: absolute;
+            border: 3px solid white;
+            border-radius: 15px;
+            font-weight: 300;
+            color: rgb(225, 233, 211);
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        #input{
+            width: 70%;
+            background-color: rgba(225, 233, 211,0.2);
+            color: white;
+        }
+        #form{
+            width: 100%;
+            height: 30px;
+            position: absolute;
+            bottom: 15px; 
+            right: 15px;  
+            left: 15px;
+        }
+        #form button{
+            background-color: rgba(225, 233, 211,0.5);
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.3.1/lib/p5.js"></script>
-    <script>
-
-    </script>
 </head>
 
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">Charades</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
 
-    <div id="players-box">
-        <h2>Players: </h2>
-        <ul id="players"></ul>
-    </div>
-    <div id="canvas-box">
+    <br>
 
+    <div class="container" >
+        <div class="row" style="width: 2000px;">
+            <div class="col-sm">
+                <div class="players">
+                    <div id="players-box">
+                        <h2>Players </h2>
+                        <ul id="players"></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-7">
+                <div class="border">
+                    <div id="canvas-box"></div>
+                </div>
+                <br>
+                <div class="tools">
+                    <button type="button" class="button">Undo</button>
+                    <button onClick="clearBoard()" type="button" class="button">Clear</button>
+                    <div onClick="changeColor(this)" class="color-field" style="background: red;"></div>
+                    <div onClick="changeColor(this)" class="color-field" style="background: blue;"></div>
+                    <div onClick="changeColor(this)" class="color-field" style="background: violet;"></div>
+                    <div onClick="changeColor(this)" class="color-field" style="background: black;"></div>
+                    <div onClick="changeColor(this)" class="color-field" style="background: green;"></div>
+                    <div onClick="changeColor(this)" class="color-field" style="background: yellow;"></div>
+                    <input type="color" class="color-picker">
+                    <input oninput="currThick = this.value" type="range" min="1" max="100" class="weight">
+                </div>
+            </div>
+            <div class="col-sm">
+                <div class="chat">
+                    <h2>Chat </h2>
+                    <div id="message-box">
+                        <ul id="messages"></ul>
+                    </div>
+                    <form id="form" action="">
+                        <input id="input" autocomplete="off" />
+                        <button>Send</button>
+                    </form>
+                </div>
+                
+            </div>
+        </div>
     </div>
-    <div id="message-box">
-        <ul id="messages"></ul>
-        <form id="form" action="">
-            <input id="input" autocomplete="off" /><button>Send</button>
-        </form>
-    </div>
+    
 
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
+        let currColor = 'black';
+        let currThick = 25;
+        
 
+        function changeColor(e){
+            currColor = e.style.background;
+        }
 
         function setup() {
-            var canvas = createCanvas(400, 400);
+            var canvas = createCanvas(1000, 600);
             canvas.parent('canvas-box');
-            background(127);
+            background(999);
+
+            
+
             socket.on('mouse',
                 function (data) {
 
-                    fill(0);
-                    ellipse(data.x, data.y, 5, 5);
+                    fill(data.color);
+                    noStroke();   
+                    ellipse(data.x, data.y, data.thick/3, data.thick/3);
                 }
             );
         }
@@ -74,7 +199,9 @@
         function mouseDragged() {
             let data = {
                 x: mouseX,
-                y: mouseY
+                y: mouseY,
+                color: currColor,
+                thick: currThick,
             };
             console.log(data);
             // Send that object to the socket
@@ -112,6 +239,15 @@
             }
         });
     </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
 </body>
 
 </html>
