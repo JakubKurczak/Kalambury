@@ -138,6 +138,7 @@
                 </div>
                 <br>
                 <div class="tools">
+                    <button type="button" class="button" id="start_game_button" onClick="startGame()">START</button>
                     <button type="button" class="button">Undo</button>
                     <button onClick="clearBoard()" type="button" class="button">Clear</button>
                     <div onClick="changeColor(this)" class="color-field" style="background: red;"></div>
@@ -174,7 +175,9 @@
         let currColor = 'black';
         let currThick = 25;
         
-
+        var my_name = '';
+        var is_painter = false;
+        var current_word ='';
         function changeColor(e){
             currColor = e.style.background;
         }
@@ -203,9 +206,10 @@
                 color: currColor,
                 thick: currThick,
             };
-            console.log(data);
             // Send that object to the socket
-            socket.emit('mouse', data);
+            if(is_painter){
+                socket.emit('mouse', data);
+            }            
         }
 
 
@@ -214,10 +218,19 @@
         var form = document.getElementById('form');
         var input = document.getElementById('input');
 
+        function startGame(){
+            console.log("button clicked");
+            socket.emit('start','');
+        }
+
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
+            if (input.value && !is_painter) {
+                var message = input.value;
+                if(message == current_word){
+                    socket.emit('right_answer',my_name);
+                }
+                socket.emit('chat message', message);
                 input.value = '';
             }
         });
@@ -227,6 +240,11 @@
             item.textContent = msg;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('my_name', function(msg){
+            my_name = msg;
+            console.log(my_name);
         });
 
         socket.on('users', function (users) {
@@ -244,6 +262,25 @@
             title.innerHTML = room_name;
 
         })
+
+        socket.on('painter',function(painter_name){
+            is_painter = painter_name.painter == my_name;
+            current_word = painter_name.word;
+            if(is_painter){
+                alert("You are painter, word is: "+current_word);
+            }
+
+            console.log(my_name);
+            console.log(is_painter);
+        });
+
+        socket.on('game_winner',function(winner){            
+            clear();
+            background(999);
+            alert("Answer was: "+ current_word + "winner: "+winner);
+            is_painter = false;
+            current_word = '';
+        });
     </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"

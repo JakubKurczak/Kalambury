@@ -13,6 +13,8 @@ var active_users_names = [];
 var active_rooms = [];
 var players_in_rooms = {};
 
+var word_list = ['monkey','lizard','lion','dog','cat','mouse'];
+
 app.use(sessionMiddleware); //idk why we have to put this data but its mandatory
 app.use(bodyParser.json());
 
@@ -70,16 +72,18 @@ io.on('connection', (socket)=>{
 
     var name = socket.request.session.player_name;
     socket.join(socket.request.session.room_name);
+    socket.join(name);
 
     active_users[name] = socket;
     socket.data.user_name = name;
     console.log(name + " joined room " + socket.request.session.room_name);
 
-    io.to(socket.request.session.room_name).emit('users',players_in_rooms[socket.request.session.room_name]);
+    io.in(name).emit('my_name',name);
+    io.in(socket.request.session.room_name).emit('users',players_in_rooms[socket.request.session.room_name]);
 
-    io.to(socket.request.session.room_name).emit('room_name',socket.request.session.room_name);
+    io.in(socket.request.session.room_name).emit('room_name',socket.request.session.room_name);
     socket.on('chat message', (msg) => {
-        io.to(socket.request.session.room_name).emit('chat message', msg);
+        io.in(socket.request.session.room_name).emit('chat message', msg);
       });
 
     
@@ -99,7 +103,7 @@ io.on('connection', (socket)=>{
         for(const i in players_in_rooms[socket.request.session.room_name]){
             if(players_in_rooms[socket.request.session.room_name][i] == socket.data.user_name){
                 players_in_rooms[socket.request.session.room_name].splice(index, 1);
-                io.to(socket.request.session.room_name).emit('users',players_in_rooms[socket.request.session.room_name]);
+                io.in(socket.request.session.room_name).emit('users',players_in_rooms[socket.request.session.room_name]);
                 break;
             }
             index += 1;
@@ -117,7 +121,18 @@ io.on('connection', (socket)=>{
     });
 
     socket.on('mouse', (data)=>{
-        io.to(socket.request.session.room_name).emit('mouse',data);        
+        io.in(socket.request.session.room_name).emit('mouse',data);        
+    });
+
+
+    socket.on('start',(m)=>{
+        var painters_index = Math.floor((Math.random() * players_in_rooms[socket.request.session.room_name].length));
+        var word_index = Math.floor((Math.random() * word_list.length));
+        io.in(socket.request.session.room_name).emit('painter',{painter: players_in_rooms[socket.request.session.room_name][painters_index],word: word_list[word_index]});
+    });
+
+    socket.on('right_answer',(player)=>{
+        io.in(socket.request.session.room_name).emit('game_winner',player);
     });
 
 });
