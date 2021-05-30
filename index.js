@@ -77,10 +77,12 @@ io.on('connection', (socket)=>{
 
     io.to(socket.request.session.room_name).emit('users',players_in_rooms[socket.request.session.room_name]);
 
+    io.to(socket.request.session.room_name).emit('room_name',socket.request.session.room_name);
     socket.on('chat message', (msg) => {
         io.to(socket.request.session.room_name).emit('chat message', msg);
       });
 
+    
     socket.on('disconnect', ()=>{
         console.log('a user disconnected');
         var index = 0;
