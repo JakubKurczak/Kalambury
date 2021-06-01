@@ -7,6 +7,10 @@ const session = require('express-session');
 const { Server } = require("socket.io");
 const io = new Server(server);
 const sessionMiddleware = session({secret: 'secret',saveUninitialized: true, resave: true})
+const FacebookStrategy = require("passport-facebook").Strategy;
+var passport = require('passport')
+var User = require('./user.js');
+
 
 var active_users = {};
 var active_users_names = [];
@@ -15,17 +19,53 @@ var players_in_rooms = {};
 
 app.use(sessionMiddleware); //idk why we have to put this data but its mandatory
 app.use(bodyParser.json());
+app.set('view engine', 'ejs');
 
+
+passport.use(new FacebookStrategy({
+    clientID: "148208440672477",
+    clientSecret: "53a43946c8ad417041aed57971b856b4",
+    callbackURL: "http://localhost:4000"
+  },
+  function(accessToken, refreshToken, profile, done) {
+        process.nextTick(function(){
+            User.findOne({"facebook.id": profile.id}, function(err, user){
+                console.log(profile);
+                if(err)
+                    return done(err);
+                if(user)
+                    return done(null,user);
+                else {
+                    var newUser = new User();
+                    newUser.facebook.id = profile.id;
+                    newUser.facebook.token = accessToken;
+                    newUser.facebook.name = profile.name.givenName + " " + profile.name.familyName;
+                    newUser.facebook.email = profile.emails[0].value;
+                    newUser.save(function(err){
+                        if(err)
+                            throw err;
+                        return done(null, newUser);
+                       
+                    });
+                }
+            })
+        })
+    })
+);
+app.get('/auth/facebook', passport.authenticate('facebook'));
+app.get('/auth/facebook/callback',
+  passport.authenticate('facebook', { successRedirect: '/',
+                                      failureRedirect: '/' }));
 io.use((socket, next)=>{
     sessionMiddleware(socket.request, {}, next);
 });
 
 app.get('/game', (req, res)=>{
-    res.sendFile(__dirname + '/pages/index.html');
+    res.render('index');
 });
 
 app.get('/', (req, res)=>{
-    res.sendFile(__dirname + '/pages/start_page.html');
+    res.render('start_page', { name: "Robert Mundziel"});
 });
 
 app.post('/make_game',(req,res)=>{
