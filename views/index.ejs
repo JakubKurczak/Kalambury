@@ -17,7 +17,7 @@
             font-family: Candy, cursive;
             font-weight: 600;
             overflow: hidden;
-            background: #6ebbdf;
+            background: #47597e;
         }
         .tools {
             display: flex;
@@ -112,7 +112,7 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="/">Charades</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -173,7 +173,10 @@
         var socket = io();
         let currColor = 'black';
         let currThick = 25;
-        
+        var first = true;
+        var mouseDown = 0;
+        var oldX = 0;
+        var oldY = 0;
 
         function changeColor(e){
             currColor = e.style.background;
@@ -184,7 +187,7 @@
             canvas.parent('canvas-box');
             background(999);
 
-            
+
 
             socket.on('mouse',
                 function (data) {
@@ -192,6 +195,19 @@
                     fill(data.color);
                     noStroke();   
                     ellipse(data.x, data.y, data.thick/3, data.thick/3);
+                    if(first){
+                        oldY = data.y;
+                        oldX = data.x;
+                        first = false;
+                    }
+                    stroke(data.color);
+                    strokeWeight(data.thick / 3);
+                    console.log(oldX);
+                    line(data.x, data.y, oldX, oldY);
+                    if (!first) {
+                        oldY = data.y;
+                        oldX = data.x;
+                    }
                 }
             );
         }
@@ -206,8 +222,16 @@
             console.log(data);
             // Send that object to the socket
             socket.emit('mouse', data);
+
         }
 
+        document.body.onmousedown = function () {
+            ++mouseDown;
+        }
+        document.body.onmouseup = function () {
+            --mouseDown;
+            first = true;
+        }
 
 
 
