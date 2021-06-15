@@ -19,6 +19,11 @@
             overflow: hidden;
             background: #47597e;
         }
+
+        ul{
+            list-style-type: none;
+        }
+
         .tools {
             display: flex;
             justify-content: center;
@@ -273,13 +278,37 @@
             console.log(my_name);
         });
 
-        socket.on('users', function (users) {
+        socket.on('users', function (users_scores) {
             var players = document.getElementById('players');
             players.innerHTML = "";
-            for (const i in users) {
+            var users = users_scores['users'];
+            var scores = users_scores['scores'];
+            console.log('scores');
+            console.log(scores);
+            var m_users={};
+            for(const i in users){
+                if(scores[users[i]] in m_users){
+                    m_users[scores[users[i]]].push(users[i]);
+                }else{
+                    m_users[scores[users[i]]] = [];
+                    m_users[scores[users[i]]].push(users[i]);
+                }                
+            }
+            console.log(m_users);
+            console.log(Object.keys(m_users).reverse());
+            for (const index in Object.keys(m_users).reverse()) {
+                var i = parseInt(( Object.keys(m_users).reverse())[index]);
+                for( user_index in m_users[i]){
+                var user = m_users[i][user_index];
                 var item = document.createElement('li');
-                item.textContent = users[i];
+                if(user == my_name){
+                    item.style.color = "white";
+                }else{
+                    item.style.color = "#e1e9d3";
+                }
+                item.textContent = user + " " + i;
                 players.appendChild(item);
+                }
             }
         });
 

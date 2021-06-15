@@ -14,6 +14,7 @@ var User = require('./user.js');
 
 var active_users = {};
 var active_users_names = [];
+var active_users_scores = {};
 var active_rooms = [];
 var players_in_rooms = {};
 
@@ -80,6 +81,7 @@ app.post('/make_game',(req,res)=>{
         req.session.room_name = roomName;
         active_rooms.push(roomName);
         active_users_names.push(playerName);
+        active_users_scores[playerName] = 0;
 
         players_in_rooms[roomName] = [];
         players_in_rooms[roomName].push(playerName);
@@ -99,6 +101,7 @@ app.post('/join_game',(req,res)=>{
 
         players_in_rooms[roomName].push(playerName);
         active_users_names.push(playerName);
+        active_users_scores[playerName] = 0;
 
         res.sendStatus(200);
     }else{
@@ -119,7 +122,7 @@ io.on('connection', (socket)=>{
     console.log(name + " joined room " + socket.request.session.room_name);
 
     io.in(name).emit('my_name',name);
-    io.in(socket.request.session.room_name).emit('users',players_in_rooms[socket.request.session.room_name]);
+    io.in(socket.request.session.room_name).emit('users',{'users': players_in_rooms[socket.request.session.room_name], 'scores': active_users_scores});
 
     io.in(socket.request.session.room_name).emit('room_name',socket.request.session.room_name);
     socket.on('chat message', (msg) => {
@@ -143,7 +146,7 @@ io.on('connection', (socket)=>{
         for(const i in players_in_rooms[socket.request.session.room_name]){
             if(players_in_rooms[socket.request.session.room_name][i] == socket.data.user_name){
                 players_in_rooms[socket.request.session.room_name].splice(index, 1);
-                io.in(socket.request.session.room_name).emit('users',players_in_rooms[socket.request.session.room_name]);
+                io.in(socket.request.session.room_name).emit('users',{'users': players_in_rooms[socket.request.session.room_name], 'scores': active_users_scores});
                 break;
             }
             index += 1;
@@ -172,6 +175,8 @@ io.on('connection', (socket)=>{
     });
 
     socket.on('right_answer',(player)=>{
+        active_users_scores[player] += 1;
+        io.in(socket.request.session.room_name).emit('users',{'users': players_in_rooms[socket.request.session.room_name], 'scores': active_users_scores});
         io.in(socket.request.session.room_name).emit('game_winner',player);
     });
 
