@@ -19,7 +19,11 @@
             overflow: hidden;
             background: #47597e;
         }
-
+        @media only screen and (max-width: 1000px) {
+                body {
+                    zoom: 50%;
+                }
+        }
         ul{
             list-style-type: none;
         }
@@ -132,6 +136,7 @@
             <div class="col-sm">
                 <div class="players">
                     <div id="players-box">
+                        <h1>Room:</h1>
                         <h1 id="room_name"></h1>
                         <h2>Players </h2>
                         <ul id="players"></ul>
@@ -145,8 +150,7 @@
                 <br>
                 <div class="tools">
                     <button type="button" class="button" id="start_game_button" onClick="startGame()">START</button>
-                    <button type="button" class="button">Undo</button>
-                    <button onClick="clearBoard()" type="button" class="button">Clear</button>
+                    <div onClick="changeColor(this)" class="color-field" style="background: white;"></div>
                     <div onClick="changeColor(this)" class="color-field" style="background: red;"></div>
                     <div onClick="changeColor(this)" class="color-field" style="background: blue;"></div>
                     <div onClick="changeColor(this)" class="color-field" style="background: violet;"></div>
@@ -206,15 +210,16 @@
                     fill(data.color);
                     noStroke();   
                     ellipse(data.x, data.y, data.thick/3, data.thick/3);
-                    if(first){
-                        oldY = data.y;
-                        oldX = data.x;
+                    if(data.first){
+                        data.oldY = data.y;
+                        data.oldX = data.x;
+                        data.first = false;
                         first = false;
                     }
                     stroke(data.color);
                     strokeWeight(data.thick / 3);
-                    console.log(oldX);
-                    line(data.x, data.y, oldX, oldY);
+                    console.log(data);
+                    line(data.x, data.y, data.oldX, data.oldY);
                     if (!first) {
                         oldY = data.y;
                         oldX = data.x;
@@ -227,9 +232,13 @@
             let data = {
                 x: mouseX,
                 y: mouseY,
+                oldY: oldY,
+                oldX: oldX,
                 color: currColor,
                 thick: currThick,
+                first: first
             };
+            
             // Send that object to the socket
             if(is_painter){
                 socket.emit('mouse', data);
